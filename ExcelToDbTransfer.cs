@@ -35,14 +35,6 @@ namespace RecomendationSystemWorkerService
             while (!stoppingToken.IsCancellationRequested)
             {
           
-                var productionCampanies = ReadProductionCompaniesFromCsv("E:\\Marvin\\Movies_final-exam\\CleanedData\\cleaned_production_companies.csv");
-                await BulkInsertProductionCompaniesAsync(productionCampanies);
-
-                var productionCountries = ReadProductionCountriesFromCsv("E:\\Marvin\\Movies_final-exam\\CleanedData\\cleaned_production_countries.csv");
-                await BulkInsertProductionCountriesAsync(productionCountries);
-                var ratingz = ReadRatingsFromCsv("E:\\Marvin\\Movies_final-exam\\CleanedData\\cleaned_ratings.csv");
-                await BulkInsertRatingsAsync(ratingz);
-
 
                 var lang = ReadSpokenLanguagesFromCsv("E:\\Marvin\\Movies_final-exam\\CleanedData\\cleaned_spoken_languages.csv");
                 await BulkInsertSpokenLanguagesAsync(lang);
@@ -53,136 +45,7 @@ namespace RecomendationSystemWorkerService
                 await Task.Delay(10000, stoppingToken); // Adjust the delay as needed
             }
         }
-        private List<ProductionCompany> ReadProductionCompaniesFromCsv(string filePath)
-        {
-            var productionCompanies = new List<ProductionCompany>();
 
-            using (TextFieldParser parser = new TextFieldParser(filePath))
-            {
-                parser.TextFieldType = FieldType.Delimited;
-                parser.SetDelimiters(",");
-                parser.HasFieldsEnclosedInQuotes = true;
-
-                // Skip header row
-                if (!parser.EndOfData) parser.ReadLine();
-
-                while (!parser.EndOfData)
-                {
-                    string[] fields = parser.ReadFields();
-
-                    var productionCompany = new ProductionCompany();
-
-                    // Parse and set the properties here
-                    if (!int.TryParse(fields[0], out int movieId))
-                    {
-                        // Handle parsing error
-                    }
-                    productionCompany.MovieId = movieId;
-
-                    if (!int.TryParse(fields[1], out int productionCompanyId))
-                    {
-                        // Handle parsing error
-                    }
-                    productionCompany.ProductionCompaniesId = productionCompanyId;
-
-                    productionCompany.Name = fields[2];
-
-                    productionCompanies.Add(productionCompany);
-                }
-            }
-
-            return productionCompanies;
-        }
-        private List<ProductionCountry> ReadProductionCountriesFromCsv(string filePath)
-        {
-            var productionCountries = new List<ProductionCountry>();
-
-            using (TextFieldParser parser = new TextFieldParser(filePath))
-            {
-                parser.TextFieldType = FieldType.Delimited;
-                parser.SetDelimiters(",");
-                parser.HasFieldsEnclosedInQuotes = true;
-
-                // Skip header row
-                if (!parser.EndOfData) parser.ReadLine();
-
-                while (!parser.EndOfData)
-                {
-                    string[] fields = parser.ReadFields();
-
-                    var productionCountry = new ProductionCountry();
-
-                    // Parse and set the properties here
-                    if (!int.TryParse(fields[0], out int movieId))
-                    {
-                        _logger.LogError($"Invalid integer value for 'MovieId' at row {parser.LineNumber}");
-                        continue;
-                    }
-
-                    productionCountry.MovieId = movieId;
-                    productionCountry.ProductionCountriesId = fields[1];
-                    productionCountry.Name = fields[2];
-
-                    productionCountries.Add(productionCountry);
-                }
-            }
-
-            return productionCountries;
-        }
-        private List<Rating> ReadRatingsFromCsv(string filePath)
-        {
-            var ratings = new List<Rating>();
-
-            using (TextFieldParser parser = new TextFieldParser(filePath))
-            {
-                parser.TextFieldType = FieldType.Delimited;
-                parser.SetDelimiters(",");
-                parser.HasFieldsEnclosedInQuotes = true;
-
-                // Skip header row
-                if (!parser.EndOfData) parser.ReadLine();
-
-                while (!parser.EndOfData)
-                {
-                    string[] fields = parser.ReadFields();
-
-                    var rating = new Rating();
-
-                    // Parse and set the properties here
-                    if (!TryParseInt(fields[0], out int userId))
-                    {
-                        _logger.LogError($"Invalid float value for 'userid' at row {parser.LineNumber}");
-                        continue;
-                    }
-                    rating.UserId = userId;
-
-                    if (!TryParseInt(fields[1], out int movieId))
-                    {
-                        _logger.LogError($"Invalid float value for 'MovieId' at row {parser.LineNumber}");
-                        continue;
-                    }
-                    rating.MovieId = movieId;
-
-                    if (!TryParseFloat(fields[2], out float ratingValue))
-                    {
-                        _logger.LogError($"Invalid float value for 'ratingvalue' at row {parser.LineNumber}");
-                        continue;
-                    }
-                    rating.RatingValue = ratingValue;
-
-                    if (!TryParseLong(fields[3], out long timestamp))
-                    {
-                        _logger.LogError($"Invalid float value for 'timestamp' at row {parser.LineNumber}");
-                        continue;
-                    }
-                    rating.Timestamp = timestamp;
-
-                    ratings.Add(rating);
-                }
-            }
-
-            return ratings;
-        }
         private List<SpokenLanguage> ReadSpokenLanguagesFromCsv(string filePath)
         {
             var spokenLanguages = new List<SpokenLanguage>();
@@ -273,68 +136,59 @@ namespace RecomendationSystemWorkerService
 
             return ratingsSmall;
         }
-
-
-
-     private async Task BulkInsertProductionCompaniesAsync(List<ProductionCompany> productionCompanies)
+        private List<Rating> ReadRatingsFromCsv(string filePath)
         {
-            DataTable productionCompaniesTable = ConvertProductionCompaniesToDataTable(productionCompanies);
+            var ratings = new List<Rating>();
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (TextFieldParser parser = new TextFieldParser(filePath))
             {
-                await connection.OpenAsync();
-                using (var transaction = connection.BeginTransaction())
-                using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction))
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(",");
+                parser.HasFieldsEnclosedInQuotes = true;
+
+                // Skip header row
+                if (!parser.EndOfData) parser.ReadLine();
+
+                while (!parser.EndOfData)
                 {
-                    bulkCopy.DestinationTableName = "ProductionCompanies"; // Set the destination table name
+                    string[] fields = parser.ReadFields();
 
-                    // Map columns
-                    bulkCopy.ColumnMappings.Add("MovieId", "MovieId");
-                    bulkCopy.ColumnMappings.Add("ProductionCompaniesId", "ProductionCompaniesId");
-                    bulkCopy.ColumnMappings.Add("Name", "Name");
+                    var rating = new Rating();
 
-                    try
+                    // Parse and set the properties here
+                    if (!TryParseInt(fields[0], out int userId))
                     {
-                        await bulkCopy.WriteToServerAsync(productionCompaniesTable);
-                        transaction.Commit(); // Commit the transaction if no exceptions
+                        _logger.LogError($"Invalid float value for 'userid' at row {parser.LineNumber}");
+                        continue;
                     }
-                    catch (Exception ex)
+                    rating.UserId = userId;
+
+                    if (!TryParseInt(fields[1], out int movieId))
                     {
-                        transaction.Rollback(); // Rollback on error
-                        _logger.LogError($"Bulk insert failed: {ex.Message}", ex);
+                        _logger.LogError($"Invalid float value for 'MovieId' at row {parser.LineNumber}");
+                        continue;
                     }
+                    rating.MovieId = movieId;
+
+                    if (!TryParseFloat(fields[2], out float ratingValue))
+                    {
+                        _logger.LogError($"Invalid float value for 'ratingvalue' at row {parser.LineNumber}");
+                        continue;
+                    }
+                    rating.RatingValue = ratingValue;
+
+                    if (!TryParseLong(fields[3], out long timestamp))
+                    {
+                        _logger.LogError($"Invalid float value for 'timestamp' at row {parser.LineNumber}");
+                        continue;
+                    }
+                    rating.Timestamp = timestamp;
+
+                    ratings.Add(rating);
                 }
             }
-        }
-        private async Task BulkInsertProductionCountriesAsync(List<ProductionCountry> productionCountries)
-        {
-            DataTable productionCountriesTable = ConvertProductionCountriesToDataTable(productionCountries);
 
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync();
-                using (var transaction = connection.BeginTransaction())
-                using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction))
-                {
-                    bulkCopy.DestinationTableName = "ProductionCountries"; // Set the destination table name
-
-                    // Map columns
-                    bulkCopy.ColumnMappings.Add("MovieId", "MovieId");
-                    bulkCopy.ColumnMappings.Add("ProductionCountriesId", "ProductionCountriesId");
-                    bulkCopy.ColumnMappings.Add("Name", "Name");
-
-                    try
-                    {
-                        await bulkCopy.WriteToServerAsync(productionCountriesTable);
-                        transaction.Commit(); // Commit the transaction if no exceptions
-                    }
-                    catch (Exception ex)
-                    {
-                        transaction.Rollback(); // Rollback on error
-                        _logger.LogError($"Bulk insert failed: {ex.Message}", ex);
-                    }
-                }
-            }
+            return ratings;
         }
         private async Task BulkInsertRatingsAsync(List<Rating> ratings)
         {
@@ -388,6 +242,27 @@ namespace RecomendationSystemWorkerService
                 }
             }
         }
+        private DataTable ConvertRatingsToDataTable(List<Rating> ratings)
+        {
+            DataTable table = new DataTable();
+
+            // Define the columns
+            table.Columns.Add("UserId", typeof(int));
+            table.Columns.Add("MovieId", typeof(int));
+            table.Columns.Add("RatingValue", typeof(float));
+            table.Columns.Add("Timestamp", typeof(long));
+
+            // Populate the DataTable from the list
+            foreach (var rating in ratings)
+            {
+                table.Rows.Add(rating.UserId, rating.MovieId, rating.RatingValue, rating.Timestamp);
+            }
+
+            return table;
+        }
+
+
+
         private async Task BulkInsertSpokenLanguagesAsync(List<SpokenLanguage> spokenLanguages)
         {
             DataTable spokenLanguagesTable = ConvertSpokenLanguagesToDataTable(spokenLanguages);
@@ -451,58 +326,7 @@ namespace RecomendationSystemWorkerService
         }
 
 
-     private DataTable ConvertProductionCompaniesToDataTable(List<ProductionCompany> productionCompanies)
-        {
-            DataTable table = new DataTable();
-
-            // Define the columns
-            table.Columns.Add("MovieId", typeof(int));
-            table.Columns.Add("ProductionCompaniesId", typeof(int));
-            table.Columns.Add("Name", typeof(string));
-
-            // Populate the DataTable from the list
-            foreach (var productionCompany in productionCompanies)
-            {
-                table.Rows.Add(productionCompany.MovieId, productionCompany.ProductionCompaniesId, productionCompany.Name);
-            }
-
-            return table;
-        }
-        private DataTable ConvertProductionCountriesToDataTable(List<ProductionCountry> productionCountries)
-        {
-            DataTable table = new DataTable();
-
-            // Define the columns
-            table.Columns.Add("MovieId", typeof(int));
-            table.Columns.Add("ProductionCountriesId", typeof(string));
-            table.Columns.Add("Name", typeof(string));
-
-            // Populate the DataTable from the list
-            foreach (var productionCountry in productionCountries)
-            {
-                table.Rows.Add(productionCountry.MovieId, productionCountry.ProductionCountriesId, productionCountry.Name);
-            }
-
-            return table;
-        }
-        private DataTable ConvertRatingsToDataTable(List<Rating> ratings)
-        {
-            DataTable table = new DataTable();
-
-            // Define the columns
-            table.Columns.Add("UserId", typeof(int));
-            table.Columns.Add("MovieId", typeof(int));
-            table.Columns.Add("RatingValue", typeof(float));
-            table.Columns.Add("Timestamp", typeof(long));
-
-            // Populate the DataTable from the list
-            foreach (var rating in ratings)
-            {
-                table.Rows.Add(rating.UserId, rating.MovieId, rating.RatingValue, rating.Timestamp);
-            }
-
-            return table;
-        }
+  
         private DataTable ConvertSpokenLanguagesToDataTable(List<SpokenLanguage> spokenLanguages)
         {
             DataTable table = new DataTable();
@@ -538,8 +362,6 @@ namespace RecomendationSystemWorkerService
 
             return table;
         }
-
-
 
         private bool TryParseInt(string value, out int result)
         {
