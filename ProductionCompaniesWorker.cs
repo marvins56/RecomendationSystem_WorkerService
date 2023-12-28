@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.VisualBasic.FileIO;
+using RecomendationSystemWorkerService.Models.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;

@@ -30,7 +30,7 @@ namespace RecomendationSystemWorkerService
             {
 
 
-                var genres = ReadGenresFromCsv("E:\\Marvin\\Movies_final-exam\\CleanedData\\cleaned_genres.csv");
+                var genres = ReadGenresFromCsv("C:\\Users\\DELL\\Desktop\\gen.csv");
                 await BulkInsertGenresAsync(genres);
 
                 await Task.Delay(10000, stoppingToken); // Adjust the delay as needed

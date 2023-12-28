@@ -24,19 +24,17 @@ namespace RecomendationSystemWorkerService
             _logger = (ILogger<MoviesMetadataWorker>?)logger;
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                var movieMetadataList = ReadMoviesMetadataFromCsv("E:\\Marvin\\Movies_final-exam\\CleanedData\\cleaned_movies_metadata.csv");
+                var movieMetadataList = ReadMoviesMetadataFromCsv("C:\\Users\\DELL\\Desktop\\rr4444444.csv");
                 await BulkInsertMoviesMetadataAsync(movieMetadataList);
-
-              
-                await Task.Delay(10000, stoppingToken); // Adjust the delay as needed
+                await Task.Delay(10000, stoppingToken); 
             }
         }
-
+        
+        //read data from cleaned excel / csv file
         private List<MovieMetadata> ReadMoviesMetadataFromCsv(string filePath)
         {
             var moviesMetadata = new List<MovieMetadata>();
@@ -147,6 +145,7 @@ namespace RecomendationSystemWorkerService
 
             return moviesMetadata;
         }
+
         private async Task BulkInsertMoviesMetadataAsync(List<MovieMetadata> moviesMetadata)
         {
             DataTable moviesTable = ConvertMoviesToDataTable(moviesMetadata);
@@ -195,6 +194,7 @@ namespace RecomendationSystemWorkerService
         }
         private DataTable ConvertMoviesToDataTable(List<MovieMetadata> moviesMetadata)
         {
+
             DataTable dataTable = new DataTable();
 
             // Define the columns in the DataTable to match the structure of the MoviesMetadata table

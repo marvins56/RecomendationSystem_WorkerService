@@ -86,7 +86,6 @@ namespace RecomendationSystemWorkerService
 
             return table;
         }
-
         private async Task BulkInsertSpokenLanguagesAsync(List<SpokenLanguage> spokenLanguages)
         {
             DataTable spokenLanguagesTable = ConvertSpokenLanguagesToDataTable(spokenLanguages);
